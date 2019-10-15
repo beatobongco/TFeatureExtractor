@@ -4,7 +4,7 @@ Vectorize strings in 2 lines of code with the latest Transformer models c/o hugg
 
 ## Installation
 
-This is meant to be used in noteboooks. If using for a scrpit feel free to just copy the entire class.
+This is meant to be used in noteboooks. If using for a script feel free to just copy the entire class.
 
 For colab
 ```

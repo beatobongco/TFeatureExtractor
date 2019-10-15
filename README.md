@@ -1,10 +1,10 @@
 # TFeatureExtractor
 
-Vectorize strings in 2 lines of code with the latest Transformer models c/o huggingface!
+Vectorize strings in 2 lines of code with the latest Transformer models c/o https://github.com/huggingface/transformers!
 
 ## Installation
 
-This is meant to be used in noteboooks. If using for a script feel free to just copy the entire class.
+This is meant to be used in noteboooks too!
 
 For colab
 ```
@@ -23,8 +23,7 @@ For jupyter notebooks
 ```py
 from tfeatureextractor import TFeatureExtractor
 # Instantiate a feature extractor for BERT
-# this can be "roberta", "distilbert", and many more
-# please refer to the main code
+# this can be "roberta", "distilbert", and many more!
 tfe = TFeatureExtractor("bert")
 # Encode a list of strings
 encs = tfe.encode(["I'm sentence #1", "I'm sentence #2"])

@@ -21,8 +21,6 @@ from transformers import (
     RobertaTokenizer,
 )
 
-name = "TFeatureExtractor"
-
 class TFeatureExtractor:
     """Utility class that uses Transformer models to vectorize batches of strings"""
 

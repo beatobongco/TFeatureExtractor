@@ -6,16 +6,8 @@ Vectorize strings in 2 lines of code with the latest Transformer models c/o http
 
 This is meant to be used in noteboooks too!
 
-For colab
 ```
-!git clone https://github.com/beatobongco/TFeatureExtractor.git
-!pip install /content/TFeatureExtractor/dist/TFeatureExtractor-0.0.1-py3-none-any.whl
-```
-
-For jupyter notebooks
-```
-!git clone https://github.com/beatobongco/TFeatureExtractor.git
-!pip install TFeatureExtractor/dist/TFeatureExtractor-0.0.1-py3-none-any.whl
+!pip install git+https://github.com/beatobongco/TFeatureExtractor.git
 ```
 
 ## Usage

@@ -42,7 +42,6 @@ class TFeatureExtractor:
             "roberta": (RobertaModel, RobertaTokenizer, "roberta-base"),
         }
         m = MODELS[model_type]
-        # you might want to change from_tf
         self.model = m[0].from_pretrained(m[2])
         self.tokenizer = m[1].from_pretrained(m[2])
         if use_cpu:

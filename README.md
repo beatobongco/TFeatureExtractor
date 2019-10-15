@@ -5,7 +5,7 @@ Vectorize strings in 2 lines of code with the latest Transformer models
 ## Usage
 
 
-```
+```py
 # Instantiate a feature extractor for BERT
 tfe = TFeatureExtractor("bert")
 # Encode a list of strings

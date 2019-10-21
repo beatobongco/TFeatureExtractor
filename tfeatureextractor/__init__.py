@@ -60,7 +60,7 @@ class TFeatureExtractor:
         input_strings,
         pooling_layer=-2,
         max_length=512,
-        batch_size=10,
+        batch_size=128,
         verbose=True,
     ):
         """Encode a list of strings with selected transformer.

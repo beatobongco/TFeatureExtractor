@@ -61,6 +61,8 @@ class TFeatureExtractor:
         pooling_layer=-2,
         max_length=512,
         batch_size=10,
+        pad_token=0,
+        pad_on_left=False,
         verbose=True,
     ):
         """Encode a list of strings with selected transformer.
@@ -69,15 +71,15 @@ class TFeatureExtractor:
         
         TODO: add pooling_strategy = ("mean", "max")
         """
-        input_tensor = torch.tensor(
-            [self.tokenizer.encode(s, add_special_tokens=True) for s in input_strings]
+        input_tensor = self.encode_strings(
+            input_strings, max_length, pad_token, pad_on_left
         )
         input_dataset = TensorDataset(input_tensor)
         input_sampler = SequentialSampler(input_dataset)
         input_dataloader = DataLoader(
             input_dataset, sampler=input_sampler, batch_size=batch_size
         )
-        embeddings = torch.Tensor()
+        embeddings = torch.Tensor().to(self.device)
         input_dataloader = tqdm(input_dataloader) if verbose else input_dataloader
         for step, batch in enumerate(input_dataloader):
             batch = tuple(t.to(self.device) for t in batch)
@@ -87,3 +89,24 @@ class TFeatureExtractor:
             mean_pooled = torch.mean(last_hidden_states, 1)  # bs x hr
             embeddings = torch.cat((embeddings, mean_pooled), dim=0)
         return embeddings.cpu().numpy()
+
+    def pad_ids(self, input_ids, max_length, pad_token=0, pad_on_left=False):
+        padding_length = max_length - len(input_ids)
+        if pad_on_left:
+            input_ids = ([pad_token] * padding_length) + input_ids
+        else:
+            input_ids = input_ids + ([pad_token] * padding_length)
+        return input_ids
+
+    def encode_strings(self, input_strings, max_length, pad_token, pad_on_left):
+        input_list = []
+        for s in input_strings:
+            input_ids = self.tokenizer.encode(
+                s, max_length=max_length, add_special_tokens=True
+            )
+            input_ids_padded = self.pad_ids(
+                input_ids, max_length, pad_token, pad_on_left
+            )
+            input_list.append(input_ids_padded)
+        input_tensor = torch.Tensor(input_list).long()
+        return input_tensor

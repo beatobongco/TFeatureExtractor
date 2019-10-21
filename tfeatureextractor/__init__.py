@@ -77,7 +77,7 @@ class TFeatureExtractor:
         input_dataloader = DataLoader(
             input_dataset, sampler=input_sampler, batch_size=batch_size
         )
-        embeddings = torch.Tensor()
+        embeddings = torch.Tensor().to(self.device)
         input_dataloader = tqdm(input_dataloader) if verbose else input_dataloader
         for step, batch in enumerate(input_dataloader):
             batch = tuple(t.to(self.device) for t in batch)

@@ -21,6 +21,9 @@ from transformers import (
     RobertaTokenizer,
 )
 
+from torch.utils.data import DataLoader, SequentialSampler, TensorDataset
+from tqdm import tqdm
+
 class TFeatureExtractor:
     """Utility class that uses Transformer models to vectorize batches of strings"""
 
@@ -52,33 +55,35 @@ class TFeatureExtractor:
         # Turns off dropout and batchnorm
         self.model.eval()
 
-    def encode(self, input_strings, pooling_layer=-2, max_length=512):
+    def encode(
+        self,
+        input_strings,
+        pooling_layer=-2,
+        max_length=512,
+        batch_size=10,
+        verbose=True,
+    ):
         """Encode a list of strings with selected transformer.
         
         Returns np.array of embeddings.
         
         TODO: add pooling_strategy = ("mean", "max")
         """
-        embeddings = []
-        for s in input_strings:
-            # Add special tokens takes care of adding [CLS], [SEP], <s>... tokens in the right way for each model.
-            input_ids = torch.tensor(
-                [
-                    self.tokenizer.encode(
-                        s, add_special_tokens=True, max_length=max_length
-                    )
-                ]
-            ).to(self.device)
+        input_tensor = torch.tensor(
+            [self.tokenizer.encode(s, add_special_tokens=True) for s in input_strings]
+        )
+        input_dataset = TensorDataset(input_tensor)
+        input_sampler = SequentialSampler(input_dataset)
+        input_dataloader = DataLoader(
+            input_dataset, sampler=input_sampler, batch_size=batch_size
+        )
+        embeddings = torch.Tensor()
+        input_dataloader = tqdm(input_dataloader) if verbose else input_dataloader
+        for step, batch in enumerate(input_dataloader):
+            batch = tuple(t.to(self.device) for t in batch)
             with torch.no_grad():
-                last_hidden_states = self.model(input_ids)[
-                    pooling_layer
-                ]  # Models outputs are now tuples
-            mean_pooled = torch.mean(last_hidden_states[0], 0)
-            embeddings.append(mean_pooled.cpu().numpy())
-            print(
-                f"\rEncoding strings ({len(embeddings)} / {len(input_strings)}): {round(len(embeddings) / len(input_strings) * 100, 4)}%",
-                end="",
-                flush=True,
-            )
-        print("\n")
-        return np.array(embeddings)
+                inputs = {"input_ids": batch[0]}
+                last_hidden_states = self.model(**inputs)[pooling_layer]  # bs x sl x hr
+            mean_pooled = torch.mean(last_hidden_states, 1)  # bs x hr
+            embeddings = torch.cat((embeddings, mean_pooled), dim=0)
+        return embeddings.cpu().numpy()

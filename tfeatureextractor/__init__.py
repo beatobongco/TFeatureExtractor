@@ -70,7 +70,7 @@ class TFeatureExtractor:
         TODO: add pooling_strategy = ("mean", "max")
         """
         input_tensor = torch.tensor(
-            [self.tokenizer.encode(s, add_special_tokens=True) for s in input_strings]
+            [self.tokenizer.encode(s, add_special_tokens=True, max_length=max_length) for s in input_strings]
         )
         input_dataset = TensorDataset(input_tensor)
         input_sampler = SequentialSampler(input_dataset)

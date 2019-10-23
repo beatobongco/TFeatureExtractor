@@ -57,7 +57,9 @@ class PadTruncCollator(object):
 class TFeatureExtractor:
     """Utility class that uses Transformer models to vectorize batches of strings"""
 
-    def __init__(self, model_type, use_cpu=False):
+    def __init__(
+        self, model_type, use_cpu=False, saved_model_directory=None, from_tf=False
+    ):
         """Initializes the feature extractor with the kind of Transformer model you want to use"""
         MODELS = {
             "bert": (BertModel, BertTokenizer, "bert-base-uncased"),
@@ -75,8 +77,9 @@ class TFeatureExtractor:
             "roberta": (RobertaModel, RobertaTokenizer, "roberta-base"),
         }
         m = MODELS[model_type]
-        self.model = m[0].from_pretrained(m[2])
-        self.tokenizer = m[1].from_pretrained(m[2])
+        model_dir = saved_model_directory or m[2]
+        self.model = m[0].from_pretrained(model_dir, from_tf=from_tf)
+        self.tokenizer = m[1].from_pretrained(model_dir, from_tf=from_tf)
         if use_cpu:
             self.device = torch.device("cpu")
         else:

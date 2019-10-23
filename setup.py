@@ -5,7 +5,7 @@ with open("README.md", "r") as f:
 
 setuptools.setup(
     name="TFeatureExtractor",
-    version="0.0.8",
+    version="0.1.0",
     author="Beato Bongco",
     author_email="beatobongco@gmail.com",
     description="Vectorize strings in 2 lines of code with the latest Transformer models",

@@ -22,7 +22,6 @@ from transformers import (
 )
 
 from torch.utils.data import DataLoader, SequentialSampler, TensorDataset
-from tqdm import tqdm
 from keras.preprocessing import sequence
 
 
@@ -116,14 +115,18 @@ class TFeatureExtractor:
             collate_fn=pad_trunc_collate,
         )
         embeddings = torch.Tensor().to(self.device)
-        input_dataloader = tqdm(input_dataloader) if verbose else input_dataloader
-        for step, batch in enumerate(input_dataloader):
+        for batch in input_dataloader:
             batch = tuple(t.to(self.device) for t in batch)
             with torch.no_grad():
                 inputs = {"input_ids": batch[0]}
                 last_hidden_states = self.model(**inputs)[pooling_layer]  # bs x sl x hr
             mean_pooled = torch.mean(last_hidden_states, 1)  # bs x hr
             embeddings = torch.cat((embeddings, mean_pooled), dim=0)
+            print(
+                f"\rEncoding strings ({len(embeddings)} / {len(input_strings)}): {round(len(embeddings) / len(input_strings) * 100, 4)}%",
+                end="",
+                flush=True,
+            )
         return embeddings.cpu().numpy()
 
     def encode_strings(self, input_strings, max_length, pad_token, padding):

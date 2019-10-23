@@ -23,7 +23,38 @@ from transformers import (
 
 from torch.utils.data import DataLoader, SequentialSampler, TensorDataset
 from tqdm import tqdm
+from keras.preprocessing import sequence
 
+
+class PadTruncCollator(object):
+    """
+    A pytorch Collator that sets the max_seq_len argument at the batch level.
+    """
+    def __init__(self, percentile=100.0, padding="post", pad_token=0):
+        """
+        percentile float - indicates the percentile of the sequence lengths in a batch that will be used as basis for the max_seq_len for that batch.
+        padding str - indicates whether padding should be added at the end or beginning of the string (post or pre). This is the approach taken during fine-tuning of bert-base-uncased)
+
+        """
+        self.percentile = percentile
+        self.padding = padding
+        self.pad_token = pad_token
+
+    def __call__(self, batch):
+
+        texts, lens = zip(*batch)
+        lens = np.array(lens)
+        max_len = int(np.percentile(lens, self.percentile))
+        texts = torch.tensor(
+            sequence.pad_sequences(
+                texts, maxlen=max_len, padding=self.padding, value=self.pad_token
+            ),
+            dtype=torch.long,
+        )
+
+        return (texts,)
+    
+    
 class TFeatureExtractor:
     """Utility class that uses Transformer models to vectorize batches of strings"""
 
@@ -60,8 +91,11 @@ class TFeatureExtractor:
         input_strings,
         pooling_layer=-2,
         max_length=512,
-        batch_size=128,
+        batch_size=10,
+        pad_token=0,
         verbose=True,
+        max_len_percentile=100,
+        padding="post",
     ):
         """Encode a list of strings with selected transformer.
         
@@ -69,17 +103,22 @@ class TFeatureExtractor:
         
         TODO: add pooling_strategy = ("mean", "max")
         """
-        input_tensor = torch.tensor(
-            [self.tokenizer.encode(s, add_special_tokens=True, max_length=max_length) for s in input_strings]
+        input_tensor, length_sorted_idx, length_tensor = self.encode_strings(
+            input_strings, max_length, pad_token, padding
         )
-        input_dataset = TensorDataset(input_tensor)
+        input_dataset = TensorDataset(input_tensor, length_tensor)
         input_sampler = SequentialSampler(input_dataset)
+        pad_trunc_collate = PadTruncCollator(max_len_percentile, padding, pad_token)
         input_dataloader = DataLoader(
-            input_dataset, sampler=input_sampler, batch_size=batch_size
+            input_dataset,
+            sampler=input_sampler,
+            batch_size=batch_size,
+            collate_fn=pad_trunc_collate,
         )
         embeddings = torch.Tensor().to(self.device)
         input_dataloader = tqdm(input_dataloader) if verbose else input_dataloader
         for step, batch in enumerate(input_dataloader):
+            print(batch[0].size())
             batch = tuple(t.to(self.device) for t in batch)
             with torch.no_grad():
                 inputs = {"input_ids": batch[0]}
@@ -87,3 +126,32 @@ class TFeatureExtractor:
             mean_pooled = torch.mean(last_hidden_states, 1)  # bs x hr
             embeddings = torch.cat((embeddings, mean_pooled), dim=0)
         return embeddings.cpu().numpy()
+
+    def encode_strings(self, input_strings, max_length, pad_token, padding):
+        """
+        Returns encoded strings (sorted based on length), their lengths, and the sorting indices used
+        """
+        input_list = []
+        length_list = []
+        for s in input_strings:
+            input_ids = self.tokenizer.encode(
+                s, max_length=max_length, add_special_tokens=True
+            )
+            length = len(input_ids)
+            input_list.append(input_ids)
+            length_list.append(length)
+
+        input_tensor = torch.Tensor(
+            sequence.pad_sequences(
+                input_list, maxlen=max_length, padding=padding, value=pad_token
+            )
+            
+        ).long()
+        length_tensor = torch.Tensor(length_list).long()
+        length_sorted_idx = torch.argsort(length_tensor, descending=True)
+        return (
+            input_tensor[length_sorted_idx],
+            length_sorted_idx,
+            length_tensor[length_sorted_idx],
+        )
+

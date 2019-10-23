@@ -118,7 +118,6 @@ class TFeatureExtractor:
         embeddings = torch.Tensor().to(self.device)
         input_dataloader = tqdm(input_dataloader) if verbose else input_dataloader
         for step, batch in enumerate(input_dataloader):
-            print(batch[0].size())
             batch = tuple(t.to(self.device) for t in batch)
             with torch.no_grad():
                 inputs = {"input_ids": batch[0]}

@@ -120,14 +120,6 @@ class TFeatureExtractor:
             embeddings = torch.cat((embeddings, mean_pooled), dim=0)
         return embeddings.cpu().numpy()
 
-    def pad_ids(self, input_ids, max_length, pad_token=0, pad_on_left=False):
-        padding_length = max_length - len(input_ids)
-        if pad_on_left:
-            input_ids = ([pad_token] * padding_length) + input_ids
-        else:
-            input_ids = input_ids + ([pad_token] * padding_length)
-        return input_ids
-
     def encode_strings(self, input_strings, max_length, pad_token, padding):
         """
         Returns encoded strings (sorted based on length), their lengths, and the sorting indices used

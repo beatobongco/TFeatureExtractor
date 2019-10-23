@@ -95,7 +95,6 @@ class TFeatureExtractor:
         pad_token=0,
         verbose=True,
         max_len_percentile=100,
-        global_max_len=220,
         padding="post",
     ):
         """Encode a list of strings with selected transformer.

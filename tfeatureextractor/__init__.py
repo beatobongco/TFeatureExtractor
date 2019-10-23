@@ -27,7 +27,15 @@ from keras.preprocessing import sequence
 
 
 class PadTruncCollator(object):
-    def __init__(self, percentile=100, padding="post", pad_token=0):
+    """
+    A pytorch Collator that sets the max_seq_len argument at the batch level.
+    """
+    def __init__(self, percentile=100.0, padding="post", pad_token=0):
+        """
+        percentile float - indicates the percentile of the sequence lengths in a batch that will be used as basis for the max_seq_len for that batch.
+        padding str - indicates whether padding should be added at the end or beginning of the string (post or pre). This is the approach taken during fine-tuning of bert-base-uncased)
+
+        """
         self.percentile = percentile
         self.padding = padding
         self.pad_token = pad_token

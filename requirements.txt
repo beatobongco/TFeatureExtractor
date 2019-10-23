@@ -3,3 +3,4 @@ torch
 transformers
 setuptools
 tqdm
+keras

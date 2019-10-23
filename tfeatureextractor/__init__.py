@@ -90,7 +90,7 @@ class TFeatureExtractor:
         input_strings,
         pooling_layer=-2,
         max_length=512,
-        batch_size=10,
+        batch_size=128,
         pad_token=0,
         verbose=True,
         max_len_percentile=100,

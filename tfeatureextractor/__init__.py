@@ -23,6 +23,9 @@ from transformers import (
 from torch.utils.data import DataLoader, SequentialSampler, TensorDataset
 from keras.preprocessing import sequence
 
+def print_sparingly(message, measured_value, every=1000):
+    if measured_value % every == 0: 
+        print(f"\r{message}", end="", flush=True)
 
 class PadTruncCollator(object):
     """
@@ -118,10 +121,10 @@ class TFeatureExtractor:
                 last_hidden_states = self.model(**inputs)[pooling_layer]  # bs x sl x hr
             mean_pooled = torch.mean(last_hidden_states, 1)  # bs x hr
             embeddings = torch.cat((embeddings, mean_pooled), dim=0)
-            print(
-                f"\rEncoding strings ({len(embeddings)} / {len(input_strings)}): {round(len(embeddings) / len(input_strings) * 100, 4)}%",
-                end="",
-                flush=True,
+            print_sparingly(
+                f"Encoding strings ({len(embeddings)} / {len(input_strings)}): {round(len(embeddings) / len(input_strings) * 100, 4)}%",
+                measured_value=len(embeddings),
+                every=batch_size * 4
             )
         print("")
         return embeddings[length_sorted_idx_reversed].cpu().numpy()
@@ -138,10 +141,9 @@ class TFeatureExtractor:
             )
             input_list.append(input_ids)
             length_list.append(len(input_ids))
-            print(
-                f"\rTokenizing strings ({len(input_list)} / {len(input_strings)}): {round(len(input_list) / len(input_strings) * 100, 4)}%",
-                end="",
-                flush=True,
+            print_sparingly(
+                f"Tokenizing strings ({len(input_list)} / {len(input_strings)}): {round(len(input_list) / len(input_strings) * 100, 4)}%",
+                measured_value=len(input_list)
             )
         print("")
 

@@ -25,8 +25,11 @@ from keras.preprocessing import sequence
 
 def print_sparingly(message, measured, total, every=1000):
     """Prints a progress string sparingly so as not to take up too much computation"""
-    if measured % every == 0 or (total - measured) <= 1: 
+    final = (total - measured) == 0
+    if measured % every == 0 or final: 
         print(f"\r{message} ({measured} / {total}): {round(measured / total * 100, 2)}%", end="", flush=True)
+        if final:
+            print("")
 
 class PadTruncCollator(object):
     """
@@ -127,7 +130,6 @@ class TFeatureExtractor:
                 total=len(input_strings),
                 every=batch_size * 4
             )
-        print("")
         return embeddings[length_sorted_idx_reversed].cpu().numpy()
 
     def encode_strings(self, input_strings, max_length):
@@ -147,7 +149,6 @@ class TFeatureExtractor:
                 measured=len(input_list),
                 total=len(input_strings)
             )
-        print("")
 
         input_tensor = torch.Tensor(
             sequence.pad_sequences(
